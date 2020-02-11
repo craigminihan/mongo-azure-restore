@@ -48,7 +48,27 @@ else
             shift # past argument
             ;;
         -o|--restore-options)
-            MONGO_RESTORE_OPTS="${2}"
+            if [ ! -z "${MONGO_RESTORE_OPTS}" ]; then MONGO_RESTORE_OPTS+=","; fi
+            MONGO_RESTORE_OPTS+="${2}"
+            shift # past argument
+            ;;
+        -i|--include)
+            if [ ! -z "${MONGO_RESTORE_OPTS}" ]; then MONGO_RESTORE_OPTS+=","; fi
+            MONGO_RESTORE_OPTS+="--nsInclude=${2}"
+            shift # past argument
+            ;;
+        -x|--exclude)
+            if [ ! -z "${MONGO_RESTORE_OPTS}" ]; then MONGO_RESTORE_OPTS+=","; fi
+            MONGO_RESTORE_OPTS+="--nsExclude=${2}"
+            shift # past argument
+            ;;
+        -d|--drop)
+            if [ ! -z "${MONGO_RESTORE_OPTS}" ]; then MONGO_RESTORE_OPTS+=","; fi
+            MONGO_RESTORE_OPTS+="--drop"
+            ;;
+        -t|--threads)
+            if [ ! -z "${MONGO_RESTORE_OPTS}" ]; then MONGO_RESTORE_OPTS+=","; fi
+            MONGO_RESTORE_OPTS+="--numParallelCollections=${2}"
             shift # past argument
             ;;
         *)  # unknown option
