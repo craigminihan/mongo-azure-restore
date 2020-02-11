@@ -71,6 +71,11 @@ else
             MONGO_RESTORE_OPTS+="--numParallelCollections=${2}"
             shift # past argument
             ;;
+        -m|--mount)
+            VOLUME_ARGS="-v $(realpath ${2}):/data"
+            DISABLE_DELETE=true
+            shift # past argument
+            ;;
         *)  # unknown option
             shift # past argument
             ;;
@@ -80,7 +85,7 @@ else
 
     ENV_ARGS="-e MONGO_URI=${MONGO_URI} -e MONGO_USERNAME=${MONGO_USERNAME} -e MONGO_PASSWORD=${MONGO_PASSWORD} -e MONGO_AUTH_DB=${MONGO_AUTH_DB} -e AZURE_SA=${AZURE_SA} "
     ENV_ARGS+="-e AZURE_BLOB_CONTAINER=${AZURE_BLOB_CONTAINER} -e AZURE_SHARE_NAME=${AZURE_SHARE_NAME} -e AZURE_SOURCE_KEY=${AZURE_SOURCE_KEY} -e DB=${DB} "
-    ENV_ARGS+="-e BACKUP_MONGO_URI=${BACKUP_MONGO_URI} -e MONGO_RESTORE_OPTS=${MONGO_RESTORE_OPTS}"
+    ENV_ARGS+="-e BACKUP_MONGO_URI=${BACKUP_MONGO_URI} -e MONGO_RESTORE_OPTS=${MONGO_RESTORE_OPTS} -e DISABLE_DELETE=${DISABLE_DELETE}"
 fi
 
-docker run -ti --rm ${ENTRYPOINT} ${ENV_ARGS} mongo-azure-restore:test
+docker run -ti --rm ${ENTRYPOINT} ${ENV_ARGS} ${VOLUME_ARGS} mongo-azure-restore:test

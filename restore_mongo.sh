@@ -14,6 +14,7 @@ set -e
 # AZURE_SOURCE_KEY => azure storage account source key
 # DB => mongo db to restore
 # MONGO_RESTORE_OPTS => additional restore options
+# DISABLE_DELETE => when specified the backup will not be deleted
 
 # check the mongo uri
 if [ -z "$MONGO_URI" ]; then
@@ -67,14 +68,16 @@ if [ ! -z "${BACKUP_MONGO_URI}" ]; then
   BACKUP_NAME_PREFIX="${BACKUP_MONGO_URI//[:]/-}-"
 fi
 
-LOCAL_PATH="$HOME/tmp_dump.gz"
+LOCAL_PATH="/data/${BACKUP_NAME_PREFIX}${DB}.gz"
 REMOTE_LATEST_PATH="https://${AZURE_SA}.${AZURE_TYPE}.core.windows.net/${AZURE_CONTAINER_NAME}/latest/${BACKUP_NAME_PREFIX}${DB}-backup.gz"
 
 date
 echo "Restoring MongoDB database(s) ${DB}"
 
-echo "Copying compressed archive from Azure Storage: ${REMOTE_LATEST_PATH}"
-azcopy --source "${REMOTE_LATEST_PATH}" --destination "${LOCAL_PATH}" --source-key "${AZURE_SOURCE_KEY}"
+if [ ! -f "${LOCAL_PATH}" ]; then
+  echo "Copying compressed archive from Azure Storage: ${REMOTE_LATEST_PATH}"
+  azcopy --source "${REMOTE_LATEST_PATH}" --destination "${LOCAL_PATH}" --source-key "${AZURE_SOURCE_KEY}"
+fi
 
 echo "Restoring compressed archive to MongoDB $DB"
 if [ "$NO_AUTH" = true ]
@@ -84,7 +87,9 @@ else
   mongorestore --authenticationDatabase "${MONGO_AUTH_DB}" -u "${MONGO_USERNAME}" -p "${MONGO_PASSWORD}" --host "${MONGO_URI}" ${DB_ARG} --archive="${LOCAL_PATH}" --gzip ${MONGO_RESTORE_OPTS//[,]/ }
 fi
 
-echo "Cleaning up compressed archive"
-rm "${LOCAL_PATH}"
+if [ -z "${DISABLE_DELETE}" ]; then
+  echo "Cleaning up compressed archive"
+  rm "${LOCAL_PATH}"
+fi
 
 echo 'Restore complete!'
